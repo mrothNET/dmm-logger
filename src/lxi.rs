@@ -1,10 +1,10 @@
 use std::io::prelude::*;
 use std::net::{Shutdown, TcpStream};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use anyhow::Result;
 
-const DEFAULT_PORT: u16 = 5025;
+pub const DEFAULT_PORT: u16 = 5025;
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
 
 pub struct LxiDevice {
@@ -12,6 +12,7 @@ pub struct LxiDevice {
 }
 
 impl LxiDevice {
+    #[allow(dead_code)]
     pub fn connect(host: &str) -> Result<LxiDevice> {
         Self::connect_with_port(host, DEFAULT_PORT)
     }
@@ -63,5 +64,12 @@ impl LxiDevice {
 
     pub fn read(&mut self) -> Result<f64> {
         Ok(self.request("READ?")?.parse()?)
+    }
+
+    pub fn timed_read(&mut self) -> Result<(Instant, Duration, f64)> {
+        let started = Instant::now();
+        let reading = self.read()?;
+        let latency = started.elapsed();
+        Ok((started, latency, reading))
     }
 }
