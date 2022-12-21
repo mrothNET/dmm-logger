@@ -26,7 +26,7 @@ fn main() -> Result<()> {
         CsvFile::stdout()
     };
 
-    output.write_header(&identification)?;
+    output.write_header(&identification, cli.note())?;
 
     app::run(dmm, output, cli.sample_period(), cli.num_samples())
 }

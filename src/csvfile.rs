@@ -35,15 +35,31 @@ impl CsvFile {
         Ok(CsvFile { filename, output })
     }
 
-    pub fn write_header(&mut self, ident: &Identification) -> Result<()> {
+    pub fn write_header(&mut self, ident: &Identification, note: Option<&str>) -> Result<()> {
         (|| {
             writeln!(
                 self.output,
                 "# File created by DMM logger ({PKG_VERSION}) on {}",
                 Local::now().format("%Y-%m-%d %H:%M:%S (%Z)")
             )?;
-
             writeln!(self.output, "#")?;
+
+
+            if let Some(note) = note {
+                let note = note.trim();
+
+                if let Some(max_len) = note.lines().map(|line| line.trim_end().len()).max() {
+                    let hline = "-".repeat(max_len);
+
+                    writeln!(self.output, "# {hline}")?;
+                    for line in note.lines() {
+                        writeln!(self.output, "# {}", line.trim_end())?;
+                    }
+                    writeln!(self.output, "# {hline}")?;
+                    writeln!(self.output, "#")?;
+                }
+            }
+
             writeln!(self.output, "# Instrument")?;
             writeln!(self.output, "# ----------")?;
             writeln!(self.output, "# Manufacturer : {}", ident.manufacturer)?;
@@ -51,6 +67,7 @@ impl CsvFile {
             writeln!(self.output, "# Serial       : {}", ident.serial)?;
             writeln!(self.output, "# Firmware     : {}", ident.firmware)?;
             writeln!(self.output, "#")?;
+
             writeln!(self.output, "# Fields")?;
             writeln!(self.output, "# ------")?;
             writeln!(self.output, "# sequence     : Sequential sample number starting at 0")?;

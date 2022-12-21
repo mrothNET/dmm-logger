@@ -117,6 +117,9 @@ pub struct Cli {
     )]
     port: u16,
 
+    #[arg(help = "Add a notice to the CSV file", long, value_name = "TEXT")]
+    note: Option<String>,
+
     #[arg(help = "Print SCPI communication to stderr", long)]
     debug: bool,
 
@@ -149,6 +152,10 @@ impl Cli {
 
     pub fn debug(&self) -> bool {
         self.debug
+    }
+
+    pub fn note(&self) -> Option<&str> {
+        self.note.as_deref()
     }
 
     pub fn host(&self) -> &str {
