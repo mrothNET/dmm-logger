@@ -11,4 +11,5 @@ edition = "2021"
 anyhow = "1"
 chrono = "0.4"
 clap = { version = "4", features = ["derive"] }
+regex = "1"
 signal-hook = "0.3"

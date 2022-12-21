@@ -2,24 +2,32 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use chrono::prelude::*;
 use clap::Parser;
 
-mod lxi;
-use lxi::{LxiDevice, DEFAULT_PORT};
+mod scpi;
+use scpi::{ScpiDevice, DEFAULT_PORT};
 
 #[derive(Parser)]
 #[command(version, about)]
 struct Cli {
     #[arg(
-        help = "Sampling period in seconds",
-        short = 't',
-        long = "period",
+        help = "Sampling interval in seconds",
+        long,
         value_name = "SECONDS",
-        default_value = "1.0"
+        default_value = "1.0",
+        conflicts_with_all = ["rate"]
     )]
-    period: f64,
+    interval: f64,
+
+    #[arg(
+        help = "Sampling rate in hertz",
+        long,
+        value_name = "HERTZ",
+        conflicts_with_all = ["interval"]
+    )]
+    rate: Option<f64>,
 
     #[arg(
         short = 'n',
@@ -33,6 +41,7 @@ struct Cli {
         short = 'U',
         long,
         value_name = "RANGE",
+        aliases = ["volts", "volt"],
         conflicts_with_all = ["current", "resistance", "two", "four"]
     )]
     voltage: Option<String>,
@@ -42,6 +51,7 @@ struct Cli {
         short = 'I',
         long,
         value_name = "RANGE",
+        aliases = ["amperes", "ampere"],
         conflicts_with_all = ["voltage", "resistance", "two", "four"]
     )]
     current: Option<String>,
@@ -71,6 +81,7 @@ struct Cli {
         short = 'R',
         long,
         value_name = "RANGE",
+        aliases = ["ohms", "ohm"],
         conflicts_with_all = ["voltage", "current", "dc", "ac"]
     )]
     resistance: Option<String>,
@@ -96,51 +107,109 @@ struct Cli {
     four: bool,
 
     #[arg(
-        help = "remote port for SCPI",
-        short,
+        help = "Number of Power Line Cycles",
+        long,
+        value_name = "NPLC",
+        requires = "voltage",
+        requires = "current",
+        requires = "resistance"
+    )]
+    nplc: Option<String>,
+
+    #[arg(
+        help = "Network port for SCPI",
         long,
         default_value_t = DEFAULT_PORT
     )]
     port: u16,
 
-    #[arg(help = "Network name or IP address of the instrument")]
+    #[arg(help = "Print SCPI communication to stderr", long)]
+    debug: bool,
+
+    #[arg(help = "Network name or IP address of the instrument.")]
     host: String,
 }
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    let dc_ac = usize::from(cli.ac);
-    let two_four = usize::from(cli.four);
+    let dc_ac = ["DC", "AC"][usize::from(cli.ac)];
+    let res_fres = ["RES", "FRES"][usize::from(cli.four)];
 
-    let conf = cli
-        .voltage
-        .map(|range| format!("CONF:VOLT:{} {}", ["DC", "AC"][dc_ac], range))
-        .or_else(|| {
-            cli.current
-                .map(|range| format!("CONF:CURR:{} {}", ["DC", "AC"][dc_ac], range))
-        })
-        .or_else(|| {
-            cli.resistance
-                .map(|range| format!("CONF:{} {}", ["RES", "FRES"][two_four], range))
-        });
+    #[allow(clippy::manual_map)]
+    let conf = {
+        if let Some(volts) = cli.voltage.as_ref() {
+            Some(format!("CONF:VOLT:{dc_ac} {volts}"))
+        } else if let Some(amps) = cli.current.as_ref() {
+            Some(format!("CONF:CURR:{dc_ac} {amps}"))
+        } else if let Some(ohms) = cli.resistance.as_ref() {
+            Some(format!("CONF:{res_fres} {ohms}"))
+        } else {
+            None
+        }
+    };
+
+    let nplc = cli.nplc.map(|nplc| {
+        if cli.voltage.is_some() {
+            format!("VOLT:{dc_ac}:NPLC {nplc}")
+        } else if cli.current.is_some() {
+            format!("CURR:{dc_ac}:NPLC {nplc}")
+        } else if cli.resistance.is_some() {
+            format!("{res_fres}:NPLC {nplc}")
+        } else {
+            unreachable!()
+        }
+    });
+
+    if cli.interval == 0.0 {
+        bail!("Sampling interval 0.0 seconds is not allowed");
+    }
+
+    if cli.rate == Some(0.0) {
+        bail!("Sampling rate 0.0 hertz is not allowed");
+    }
 
     let host = &cli.host;
     let port = cli.port;
 
-    let period = Duration::from_secs_f64(cli.period);
+    let sample_period = Duration::from_secs_f64(cli.rate.map(|f| 1.0 / f).unwrap_or(cli.interval));
     let num_samples = cli.num_samples.unwrap_or(u32::MAX);
 
-    let mut dmm = LxiDevice::connect_with_port(host, port)
+    let mut dmm = ScpiDevice::connect_with_port(host, port)
         .with_context(|| format!("Connecting to instrument `{host}` failed"))?;
+
+    dmm.set_debug(cli.debug);
 
     let ident = dmm
         .request("*IDN?")
         .context("Requesting instrument identification failed")?;
 
+    dmm.send("*CLS")?;
+
+    if let Some(error) = dmm.fetch_error()? {
+        bail!(
+            "Clearing error state failed with error code {}: {}",
+            error.code,
+            error.text
+        );
+    }
+
     if let Some(conf) = conf {
         dmm.send(&conf)
             .context("Setting voltage measurement range failed")?;
+    }
+
+    if let Some(nplc) = nplc {
+        dmm.send(&nplc)
+            .context("Setting number of power line cycles failed")?;
+    }
+
+    if let Some(error) = dmm.fetch_error()? {
+        bail!(
+            "Setting up instrument failed with error code {}: {}",
+            error.code,
+            error.text
+        );
     }
 
     println!("# Identification: {ident}");
@@ -168,7 +237,7 @@ fn main() -> Result<()> {
         log(0, datetime, 0.0, 0.0, latency.as_secs_f64(), first_reading);
 
         for sequence in 1..num_samples {
-            let planed = started + sequence * period;
+            let planed = started + sequence * sample_period;
             if sleep_until(planed, &term) {
                 let datetime = Local::now();
                 let (moment, latency, reading) = dmm.timed_read().with_context(|| {
