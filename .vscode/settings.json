@@ -1,3 +1,18 @@
 {
-  "cSpell.words": ["chrono", "CURR", "fourwire", "fres", "FRES", "nplc", "recv", "scpi", "Scpi", "twowire"]
+  "cSpell.words": [
+    "chrono",
+    "consts",
+    "csvfile",
+    "CURR",
+    "datetime",
+    "fourwire",
+    "fres",
+    "FRES",
+    "nodelay",
+    "nplc",
+    "recv",
+    "scpi",
+    "Scpi",
+    "twowire"
+  ]
 }

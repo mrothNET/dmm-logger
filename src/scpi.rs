@@ -1,31 +1,31 @@
 use std::io::prelude::*;
 use std::net::{Shutdown, TcpStream};
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use anyhow::{bail, Result};
 
 pub const DEFAULT_PORT: u16 = 5025;
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
 
-pub struct ScpiDevice {
+pub struct Device {
     stream: TcpStream,
     debug: bool,
 }
 
-impl ScpiDevice {
+impl Device {
     #[allow(dead_code)]
-    pub fn connect(host: &str) -> Result<ScpiDevice> {
+    pub fn connect(host: &str) -> Result<Device> {
         Self::connect_with_port(host, DEFAULT_PORT)
     }
 
-    pub fn connect_with_port(host: &str, port: u16) -> Result<ScpiDevice> {
+    pub fn connect_with_port(host: &str, port: u16) -> Result<Device> {
         let stream = TcpStream::connect((host, port))?;
 
         stream.set_read_timeout(Some(DEFAULT_TIMEOUT))?;
         stream.set_write_timeout(Some(DEFAULT_TIMEOUT))?;
         stream.set_nodelay(true)?;
 
-        Ok(ScpiDevice {
+        Ok(Device {
             stream,
             debug: false,
         })
@@ -101,13 +101,6 @@ impl ScpiDevice {
 
     pub fn read(&mut self) -> Result<f64> {
         Ok(self.request("READ?")?.parse()?)
-    }
-
-    pub fn timed_read(&mut self) -> Result<(Instant, Duration, f64)> {
-        let started = Instant::now();
-        let reading = self.read()?;
-        let latency = started.elapsed();
-        Ok((started, latency, reading))
     }
 }
 
