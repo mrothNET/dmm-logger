@@ -80,7 +80,39 @@ impl Device {
         self.receive()
     }
 
-    pub fn fetch_error(&mut self) -> Result<Option<InstrumentError>> {
+    pub fn read(&mut self) -> Result<f64> {
+        Ok(self.request("READ?")?.parse()?)
+    }
+
+    pub fn identification(&mut self) -> Result<Identification> {
+        let response = self.request("*IDN?")?;
+
+        let fields = response.split(',').collect::<Vec<_>>();
+
+        if fields.len() == 4 {
+            let manufacturer = fields[0].trim().into();
+            let model = fields[1].trim().into();
+            let serial = fields[2].trim().into();
+            let firmware = fields[3].trim().into();
+            Ok(Identification {
+                manufacturer,
+                model,
+                serial,
+                firmware,
+            })
+        } else {
+            let model = response.trim().into();
+
+            Ok(Identification {
+                manufacturer: "?".into(),
+                model,
+                serial: "?".into(),
+                firmware: "?".into(),
+            })
+        }
+    }
+
+    pub fn fetch_error(&mut self) -> Result<Option<ScpiError>> {
         use regex::Regex;
 
         let response = self.request("SYST:ERR?")?;
@@ -90,7 +122,7 @@ impl Device {
             let code = caps[1].parse()?;
             if code != 0 {
                 let text = caps[2].to_string();
-                Ok(Some(InstrumentError { code, text }))
+                Ok(Some(ScpiError { code, text }))
             } else {
                 Ok(None)
             }
@@ -98,14 +130,18 @@ impl Device {
             bail!("Could not parse error response from instrument");
         }
     }
-
-    pub fn read(&mut self) -> Result<f64> {
-        Ok(self.request("READ?")?.parse()?)
-    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct InstrumentError {
+pub struct ScpiError {
     pub code: i32,
     pub text: String,
+}
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct Identification {
+    pub manufacturer: String,
+    pub model: String,
+    pub serial: String,
+    pub firmware: String,
 }

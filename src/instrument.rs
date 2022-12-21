@@ -1,7 +1,7 @@
 use chrono::prelude::*;
 use std::time::{Duration, Instant};
 
-use crate::scpi;
+use crate::scpi::{self, Identification};
 use anyhow::{bail, Context, Result};
 
 pub fn connect(host: &str, port: u16) -> Result<scpi::Device> {
@@ -9,8 +9,12 @@ pub fn connect(host: &str, port: u16) -> Result<scpi::Device> {
         .with_context(|| format!("Connecting to instrument `{host}` (port {port}) failed"))
 }
 
-pub fn identification(dmm: &mut scpi::Device) -> Result<String> {
-    dmm.request("*IDN?")
+pub fn disconnect(dmm: scpi::Device) -> Result<()> {
+    dmm.close().context("Disconnecting from instrument failed")
+}
+
+pub fn identification(dmm: &mut scpi::Device) -> Result<Identification> {
+    dmm.identification()
         .context("Requesting instrument identification failed")
 }
 

@@ -122,6 +122,12 @@ pub struct Cli {
 
     #[arg(help = "Network name or IP address of the instrument.")]
     host: String,
+
+    #[arg(
+        help = "Filename to save the CSV lines into.\nIf omitted, lines are written to stdout.",
+        value_name = "FILE"
+    )]
+    output: Option<String>,
 }
 
 impl Cli {
@@ -151,6 +157,10 @@ impl Cli {
 
     pub fn port(&self) -> u16 {
         self.port
+    }
+
+    pub fn output(&self) -> Option<&str> {
+        self.output.as_deref()
     }
 
     pub fn sample_period(&self) -> Duration {

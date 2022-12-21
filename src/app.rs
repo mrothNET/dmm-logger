@@ -8,32 +8,35 @@ use crate::csvfile;
 use crate::instrument;
 use crate::scpi;
 
-pub fn run(dmm: &mut scpi::Device, sample_period: Duration, num_samples: u32) -> Result<()> {
-    csvfile::write_header(&instrument::identification(dmm)?);
-
+pub fn run(
+    mut dmm: scpi::Device,
+    mut output: csvfile::CsvFile,
+    sample_period: Duration,
+    num_samples: u32,
+) -> Result<()> {
     let term = install_signal_hooks()?;
 
-    let (datetime, started, latency, first_reading) = instrument::read(dmm, 0)?;
+    let (datetime, started, latency, first_reading) = instrument::read(&mut dmm, 0)?;
 
-    csvfile::write_line(0, datetime, 0.0, 0.0, latency.as_secs_f64(), first_reading);
+    output.write_line(0, datetime, 0.0, 0.0, latency.as_secs_f64(), first_reading)?;
 
     for sequence in 1..num_samples {
         let planed = started + sequence * sample_period;
 
         if sleep_until(planed, &term) {
-            let (datetime, moment, latency, reading) = instrument::read(dmm, sequence)?;
+            let (datetime, moment, latency, reading) = instrument::read(&mut dmm, sequence)?;
 
             let delay = (moment - planed).as_secs_f64();
             let moment = (moment - started).as_secs_f64();
             let latency = latency.as_secs_f64();
 
-            csvfile::write_line(sequence, datetime, moment, delay, latency, reading);
+            output.write_line(sequence, datetime, moment, delay, latency, reading)?;
         } else {
             break;
         }
     }
 
-    Ok(())
+    instrument::disconnect(dmm)
 }
 
 fn install_signal_hooks() -> Result<Arc<AtomicBool>> {
