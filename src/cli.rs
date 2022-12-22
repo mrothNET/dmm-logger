@@ -31,7 +31,7 @@ pub struct Cli {
     num_samples: Option<u32>,
 
     #[arg(
-        help = "Switch to voltage measurement",
+        help = "Configures instrument for voltage measurement",
         short = 'U',
         long,
         value_name = "RANGE",
@@ -41,7 +41,7 @@ pub struct Cli {
     voltage: Option<String>,
 
     #[arg(
-        help = "Switch to current measurement",
+        help = "Configures instrument for current measurement",
         short = 'I',
         long,
         value_name = "RANGE",
@@ -51,7 +51,7 @@ pub struct Cli {
     current: Option<String>,
 
     #[arg(
-        help = "DC-mode for voltage or current [default]",
+        help = "Selects DC-mode for voltage or current [default]",
         long = "DC",
         alias = "dc",
         requires = "voltage",
@@ -61,7 +61,7 @@ pub struct Cli {
     dc: bool,
 
     #[arg(
-        help = "AC-mode for voltage or current",
+        help = "Selects AC-mode for voltage or current",
         long = "AC",
         alias = "ac",
         requires = "voltage",
@@ -71,7 +71,7 @@ pub struct Cli {
     ac: bool,
 
     #[arg(
-        help = "Switch to resistance measurement",
+        help = "Configures instrument for resistance measurement",
         short = 'R',
         long,
         value_name = "RANGE",
@@ -81,7 +81,7 @@ pub struct Cli {
     resistance: Option<String>,
 
     #[arg(
-        help = "2-wire resistance measurement [default]",
+        help = "Selects 2-wire resistance measurement [default]",
         short = '2',
         long = "two-wire",
         aliases = ["2-wire", "2wire", "twowire", "two"],
@@ -91,7 +91,7 @@ pub struct Cli {
     two: bool,
 
     #[arg(
-        help = "4-wire resistance measurement",
+        help = "Selects 4-wire resistance measurement",
         short = '4',
         long = "four-wire",
         aliases = ["4-wire", "4wire", "fourwire","four"],
@@ -101,12 +101,25 @@ pub struct Cli {
     four: bool,
 
     #[arg(
-        help = "Number of Power Line Cycles",
+        help = "Resolution in units as the measurement function",
+        long,
+        value_name = "VALUE",
+        aliases = ["res"],
+        requires = "voltage",
+        requires = "current",
+        requires = "resistance",
+        conflicts_with_all = ["nplc"]
+    )]
+    resolution: Option<String>,
+
+    #[arg(
+        help = "Integration time in number of power line cycles",
         long,
         value_name = "NPLC",
         requires = "voltage",
         requires = "current",
-        requires = "resistance"
+        requires = "resistance",
+        conflicts_with_all = ["resolution"]
     )]
     nplc: Option<String>,
 
@@ -117,8 +130,30 @@ pub struct Cli {
     )]
     port: u16,
 
-    #[arg(help = "Add a notice to the CSV file", long, value_name = "TEXT")]
-    note: Option<String>,
+    #[arg(
+        help = "Add a custom message to the CSV file",
+        short,
+        long,
+        aliases = ["msg"],
+        value_name = "TEXT",
+        conflicts_with_all = ["message_from"],
+    )]
+    message: Option<String>,
+
+    #[arg(
+        help = "Add file content as custom message to the CSV file",
+        long,
+        aliases = ["msg-from"],
+        value_name = "FILE",
+        conflicts_with_all = ["message"],
+    )]
+    message_from: Option<String>,
+
+    #[arg(help = "Beep instrument when logging finished", long)]
+    beep: bool,
+
+    #[arg(help = "Performs instrument reset before logging", long)]
+    reset: bool,
 
     #[arg(help = "Print SCPI communication to stderr", long)]
     debug: bool,
@@ -150,12 +185,24 @@ impl Cli {
         Ok(self)
     }
 
+    pub fn reset(&self) -> bool {
+        self.reset
+    }
+
     pub fn debug(&self) -> bool {
         self.debug
     }
 
-    pub fn note(&self) -> Option<&str> {
-        self.note.as_deref()
+    pub fn beep(&self) -> bool {
+        self.beep
+    }
+
+    pub fn message(&self) -> Option<&str> {
+        self.message.as_deref()
+    }
+
+    pub fn message_from(&self) -> Option<&str> {
+        self.message_from.as_deref()
     }
 
     pub fn host(&self) -> &str {
@@ -191,6 +238,16 @@ impl Cli {
         } else if let Some(ohms) = self.resistance.as_ref() {
             configs.push(format!("CONF:{res_fres} {ohms}"));
         }
+
+        if let Some(resolution) = &self.resolution {
+            if self.voltage.is_some() {
+                configs.push(format!("VOLT:{dc_ac}:RES {resolution}"));
+            } else if self.current.is_some() {
+                configs.push(format!("CURR:{dc_ac}:RES {resolution}"));
+            } else if self.resistance.is_some() {
+                configs.push(format!("{res_fres}:RES {resolution}"));
+            }
+        };
 
         if let Some(nplc) = &self.nplc {
             if self.voltage.is_some() {

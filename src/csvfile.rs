@@ -35,7 +35,7 @@ impl CsvFile {
         Ok(CsvFile { filename, output })
     }
 
-    pub fn write_header(&mut self, ident: &Identification, note: Option<&str>) -> Result<()> {
+    pub fn write_header(&mut self, ident: &Identification, msg: Option<&str>) -> Result<()> {
         (|| {
             writeln!(
                 self.output,
@@ -45,14 +45,14 @@ impl CsvFile {
             writeln!(self.output, "#")?;
 
 
-            if let Some(note) = note {
-                let note = note.trim();
+            if let Some(msg) = msg {
+                let msg = msg.trim();
 
-                if let Some(max_len) = note.lines().map(|line| line.trim_end().len()).max() {
+                if let Some(max_len) = msg.lines().map(|line| line.trim_end().len()).max() {
                     let hline = "-".repeat(max_len);
 
                     writeln!(self.output, "# {hline}")?;
-                    for line in note.lines() {
+                    for line in msg.lines() {
                         writeln!(self.output, "# {}", line.trim_end())?;
                     }
                     writeln!(self.output, "# {hline}")?;
