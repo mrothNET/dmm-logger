@@ -111,7 +111,7 @@ impl CsvFile {
 
             writeln!(
                 self.output,
-                "{sequence},{date},{time},{moment},{delay},{latency},{reading}"
+                "{sequence},{date},{time},{moment:.4},{delay:.4},{latency:.4},{reading}"
             )?;
 
             self.output.flush()
