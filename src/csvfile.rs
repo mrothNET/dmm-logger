@@ -3,6 +3,7 @@ use std::io::{stdout, BufWriter, Write};
 
 use anyhow::{Context, Ok, Result};
 use chrono::prelude::*;
+use unicode_segmentation::UnicodeSegmentation;
 
 use crate::scpi::Identification;
 
@@ -48,7 +49,7 @@ impl CsvFile {
             if let Some(msg) = msg {
                 let msg = msg.trim();
 
-                if let Some(max_len) = msg.lines().map(|line| line.trim_end().len()).max() {
+                if let Some(max_len) = msg.lines().map(|line| line.trim_end().graphemes(true).count()).max() {
                     let hline = "-".repeat(max_len);
 
                     writeln!(self.output, "# {hline}")?;
