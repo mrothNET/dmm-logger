@@ -7,18 +7,22 @@ use anyhow::Result;
 use crate::csvfile;
 use crate::instrument;
 use crate::scpi;
+use crate::status;
 
 pub fn run(
     dmm: &mut scpi::Device,
     mut output: csvfile::CsvFile,
     sample_period: Duration,
     num_samples: u32,
+    bar: status::MyProgressBar,
 ) -> Result<()> {
     let term = install_signal_hooks()?;
 
     let (datetime, started, latency, first_reading) = instrument::read(dmm, 0)?;
 
     output.write_line(0, datetime, 0.0, 0.0, latency.as_secs_f64(), first_reading)?;
+
+    bar.update(first_reading);
 
     for sequence in 1..num_samples {
         let planed = started + sequence * sample_period;
@@ -31,6 +35,8 @@ pub fn run(
             let latency = latency.as_secs_f64();
 
             output.write_line(sequence, datetime, moment, delay, latency, reading)?;
+
+            bar.update(reading);
         } else {
             break;
         }

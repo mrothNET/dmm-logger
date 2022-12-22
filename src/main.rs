@@ -6,6 +6,7 @@ mod cli;
 mod csvfile;
 mod instrument;
 mod scpi;
+mod status;
 
 use csvfile::CsvFile;
 
@@ -23,15 +24,21 @@ fn main() -> Result<()> {
 
     instrument::configure(&mut dmm, cli.scpi_commands(), cli.reset())?;
 
-    let mut output = if let Some(filename) = cli.output() {
-        CsvFile::create_new(filename)?
+    let sample_period = cli.sample_period();
+    let num_samples = cli.num_samples();
+
+    let (mut output, bar) = if let Some(filename) = cli.output() {
+        (
+            CsvFile::create_new(filename)?,
+            status::MyProgressBar::new(num_samples),
+        )
     } else {
-        CsvFile::stdout()
+        (CsvFile::stdout(), status::MyProgressBar::none())
     };
 
     output.write_header(&identification, message)?;
 
-    app::run(&mut dmm, output, cli.sample_period(), cli.num_samples())?;
+    app::run(&mut dmm, output, sample_period, num_samples, bar)?;
 
     if cli.beep() {
         instrument::beep(&mut dmm)?;
