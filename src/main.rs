@@ -22,7 +22,7 @@ fn main() -> Result<()> {
 
     let identification = instrument::identification(&mut dmm)?;
 
-    instrument::configure(&mut dmm, cli.scpi_commands(), cli.reset())?;
+    instrument::configure(&mut dmm, cli.configuration_commands(), cli.reset())?;
 
     let sample_period = cli.sample_period();
     let num_samples = cli.num_samples();
@@ -40,9 +40,7 @@ fn main() -> Result<()> {
 
     app::run(&mut dmm, output, sample_period, num_samples, bar)?;
 
-    if cli.beep() {
-        instrument::beep(&mut dmm)?;
-    }
+    instrument::unconfigure(&mut dmm, cli.unconfiguration_commands())?;
 
     instrument::disconnect(dmm)
 }

@@ -13,10 +13,6 @@ pub fn disconnect(dmm: scpi::Device) -> Result<()> {
     dmm.close().context("Disconnecting from instrument failed")
 }
 
-pub fn beep(dmm: &mut scpi::Device) -> Result<()> {
-    dmm.send("SYST:BEEP").context("Beeping instrument failed")
-}
-
 pub fn identification(dmm: &mut scpi::Device) -> Result<Identification> {
     dmm.identification()
         .context("Requesting instrument identification failed")
@@ -37,14 +33,34 @@ pub fn configure(dmm: &mut scpi::Device, configs: Vec<String>, reset: bool) -> R
         );
     }
 
-    if !configs.is_empty() {
-        for config in configs.iter() {
-            dmm.send(config).context("Configuring instrument failed")?;
+    batch_commands("Configuring", dmm, configs)?;
+
+    let result = dmm
+        .request("*OPC?")
+        .context("Waiting for operation condition on instrument failed")?;
+
+    if result != "1" {
+        bail!("Unexpected result from instrument for operation condition");
+    }
+
+    Ok(())
+}
+
+pub fn unconfigure(dmm: &mut scpi::Device, unconfigs: Vec<String>) -> Result<()> {
+    batch_commands("Un-configuring", dmm, unconfigs)
+}
+
+pub fn batch_commands(context: &str, dmm: &mut scpi::Device, commands: Vec<String>) -> Result<()> {
+    if !commands.is_empty() {
+        for cmd in commands.iter() {
+            dmm.send(cmd)
+                .context(format!("{context} instrument failed"))?;
         }
 
         if let Some(error) = dmm.fetch_error()? {
             bail!(
-                "Configuring instrument failed, instrument returned error code {}: {}",
+                "{} instrument failed, instrument returned error code {}: {}",
+                context,
                 error.code,
                 error.text
             );

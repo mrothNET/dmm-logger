@@ -3,6 +3,8 @@ use anyhow::{bail, Result};
 use clap::Parser;
 use std::time::Duration;
 
+const PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[derive(Parser)]
 #[command(version, about)]
 pub struct Cli {
@@ -29,6 +31,22 @@ pub struct Cli {
         help = "Number of samples to take [default: unlimited]"
     )]
     num_samples: Option<u32>,
+
+    #[arg(
+        help = "Switch off instruments display during logging",
+        long,
+        conflicts_with_all = ["display_text"]
+    )]
+    display_off: bool,
+
+    #[arg(
+        help = "Displays a text message on instrument during logging",
+        long,
+        value_name = "MESSAGE",
+        aliases = ["display-message", "display-text"],
+        conflicts_with_all = ["display_off"]
+    )]
+    display_text: Option<Option<String>>,
 
     #[arg(
         help = "Configures instrument for voltage measurement",
@@ -193,10 +211,6 @@ impl Cli {
         self.debug
     }
 
-    pub fn beep(&self) -> bool {
-        self.beep
-    }
-
     pub fn message(&self) -> Option<&str> {
         self.message.as_deref()
     }
@@ -225,7 +239,7 @@ impl Cli {
         self.num_samples.unwrap_or(u32::MAX)
     }
 
-    pub fn scpi_commands(&self) -> Vec<String> {
+    pub fn configuration_commands(&self) -> Vec<String> {
         let mut configs = Vec::<String>::new();
 
         let dc_ac = ["DC", "AC"][usize::from(self.ac)];
@@ -259,6 +273,34 @@ impl Cli {
             }
         };
 
+        if self.display_off || self.display_text.is_some() {
+            configs.push("DISP OFF".into());
+        }
+
+        if let Some(text) = self.display_text.as_ref() {
+            let default = format!("DMM Logger ({PKG_VERSION})");
+            let text = text.as_deref().unwrap_or(&default);
+            configs.push(format!("DISP:TEXT \"{text}\""));
+        }
+
         configs
+    }
+
+    pub fn unconfiguration_commands(&self) -> Vec<String> {
+        let mut unconfigs = Vec::<String>::new();
+
+        if self.display_text.is_some() {
+            unconfigs.push("DISP:TEXT:CLE".into());
+        }
+
+        if self.display_off || self.display_text.is_some() {
+            unconfigs.push("DISP ON".into());
+        }
+
+        if self.beep {
+            unconfigs.push("SYST:BEEP".into());
+        }
+
+        unconfigs
     }
 }

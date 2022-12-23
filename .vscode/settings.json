@@ -5,6 +5,7 @@
     "csvfile",
     "CURR",
     "datetime",
+    "DISP",
     "fourwire",
     "fres",
     "FRES",
@@ -14,6 +15,9 @@
     "recv",
     "scpi",
     "Scpi",
-    "twowire"
+    "twowire",
+    "unconfigs",
+    "unconfiguration",
+    "unconfigure"
   ]
 }
