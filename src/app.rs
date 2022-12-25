@@ -22,7 +22,7 @@ pub fn run(
     let (datetime, started, latency, first_reading) = instrument::read(dmm, 0)?;
 
     if drop_slow_samples && latency >= sample_period {
-        output.write_comment(&format!("0: Latency too high! ({})", latency.as_secs_f64()))?;
+        output.write_comment(format!("0: Latency too high! ({})", latency.as_secs_f64()))?;
     } else {
         output.write_reading(0, datetime, 0.0, 0.0, latency.as_secs_f64(), first_reading)?;
     }
@@ -35,7 +35,7 @@ pub fn run(
 
         if drop_slow_samples && now >= planed {
             let delay = (now - planed).as_secs_f64();
-            output.write_comment(&format!("{sequence}: Too late! {delay}"))?
+            output.write_comment(format!("{sequence}: Too late! {delay}"))?
         } else if sleep_until(planed, &term) {
             let (datetime, moment, latency, reading) = instrument::read(dmm, sequence)?;
 
@@ -43,7 +43,7 @@ pub fn run(
             let moment = (moment - started).as_secs_f64();
 
             if drop_slow_samples && latency >= sample_period {
-                output.write_comment(&format!(
+                output.write_comment(format!(
                     "{sequence}: Latency too high! ({})",
                     latency.as_secs_f64()
                 ))?

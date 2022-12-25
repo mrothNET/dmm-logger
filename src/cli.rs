@@ -246,11 +246,62 @@ impl Cli {
         self.num_samples.unwrap_or(u32::MAX)
     }
 
-    pub fn configuration_commands(&self) -> Vec<String> {
-        let mut configs = Vec::<String>::new();
+    pub fn describe(&self) -> Vec<(String, String)> {
+        let mut infos = Vec::new();
 
-        let dc_ac = ["DC", "AC"][usize::from(self.ac)];
-        let res_fres = ["RES", "FRES"][usize::from(self.four)];
+        infos.push((
+            "Sampling interval".into(),
+            format!("{} seconds", self.sample_period().as_secs_f64()),
+        ));
+
+        infos.push((
+            "Sample rate".into(),
+            format!("{} Hz", 1.0 / self.sample_period().as_secs_f64()),
+        ));
+
+        if self.drop_slow_samples {
+            infos.push(("Drop slow samples".into(), "ON".into()));
+        }
+
+        if self.display_off {
+            infos.push(("Display".into(), "OFF".into()));
+        } else if self.display_text.is_some() {
+            infos.push(("Display".into(), "Text".into()));
+        }
+
+        let dc_ac = if self.ac { "AC" } else { "DC" };
+
+        if let Some(range) = self.voltage.as_ref() {
+            infos.push((format!("{dc_ac}-Voltage"), format!("{range} Volts")));
+        } else if let Some(range) = self.current.as_ref() {
+            infos.push((format!("{dc_ac}-Current"), format!("{range} Amperes")));
+        }
+
+        if let Some(range) = self.resistance.as_ref() {
+            let mode = if self.four { "4-wire" } else { "2-wire" };
+            infos.push((format!("Resistance ({mode})"), format!("{range} Ohms")));
+        }
+
+        if let Some(resolution) = self.resolution.as_ref() {
+            infos.push(("Resolution".into(), resolution.clone()));
+        }
+
+        if let Some(nplc) = self.nplc.as_ref() {
+            infos.push(("NPLC".into(), nplc.to_string()));
+        }
+
+        if self.reset {
+            infos.push(("Reset instrument".into(), "ON".into()));
+        }
+
+        infos
+    }
+
+    pub fn configuration_commands(&self) -> Vec<String> {
+        let mut configs = Vec::new();
+
+        let dc_ac = if self.ac { "AC" } else { "DC" };
+        let res_fres = if self.four { "FRES" } else { "RES" };
 
         if let Some(volts) = self.voltage.as_ref() {
             configs.push(format!("CONF:VOLT:{dc_ac} {volts}"));

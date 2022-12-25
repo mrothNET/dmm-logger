@@ -36,7 +36,7 @@ fn main() -> Result<()> {
         (CsvFile::stdout(), status::MyProgressBar::none())
     };
 
-    output.write_header(&identification, message)?;
+    output.write_header(&cli.describe(), &identification, message)?;
 
     app::run(
         &mut dmm,
