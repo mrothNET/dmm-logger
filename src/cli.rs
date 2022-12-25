@@ -42,11 +42,14 @@ pub struct Cli {
     #[arg(
         help = "Displays a text message on instrument during logging",
         long,
-        value_name = "MESSAGE",
+        value_name = "TEXT",
         aliases = ["display-message", "display-text"],
         conflicts_with_all = ["display_off"]
     )]
     display_text: Option<Option<String>>,
+
+    #[arg(help = "Drop delayed samples or samples with high latency", long)]
+    drop_slow_samples: bool,
 
     #[arg(
         help = "Configures instrument for voltage measurement",
@@ -142,13 +145,6 @@ pub struct Cli {
     nplc: Option<String>,
 
     #[arg(
-        help = "Network port for SCPI",
-        long,
-        default_value_t = DEFAULT_PORT
-    )]
-    port: u16,
-
-    #[arg(
         help = "Add a custom message to the CSV file",
         short,
         long,
@@ -172,6 +168,13 @@ pub struct Cli {
 
     #[arg(help = "Performs instrument reset before logging", long)]
     reset: bool,
+
+    #[arg(
+        help = "Network port for SCPI",
+        long,
+        default_value_t = DEFAULT_PORT
+    )]
+    port: u16,
 
     #[arg(help = "Print SCPI communication to stderr", long)]
     debug: bool,
@@ -201,6 +204,10 @@ impl Cli {
         }
 
         Ok(self)
+    }
+
+    pub fn drop_slow_samples(&self) -> bool {
+        self.drop_slow_samples
     }
 
     pub fn reset(&self) -> bool {

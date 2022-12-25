@@ -38,7 +38,14 @@ fn main() -> Result<()> {
 
     output.write_header(&identification, message)?;
 
-    app::run(&mut dmm, output, sample_period, num_samples, bar)?;
+    app::run(
+        &mut dmm,
+        output,
+        sample_period,
+        num_samples,
+        bar,
+        cli.drop_slow_samples(),
+    )?;
 
     instrument::unconfigure(&mut dmm, cli.unconfiguration_commands())?;
 

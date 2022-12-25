@@ -96,7 +96,7 @@ impl CsvFile {
         })
     }
 
-    pub fn write_line(
+    pub fn write_reading(
         &mut self,
         sequence: u32,
         datetime: DateTime<Local>,
@@ -123,5 +123,10 @@ impl CsvFile {
                 "Writing data to stdout failed".into()
             }
         })
+    }
+
+    pub fn write_comment(&mut self, msg: &str) -> Result<()> {
+        writeln!(self.output, "# {msg}")?;
+        Ok(())
     }
 }
