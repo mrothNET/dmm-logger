@@ -6,6 +6,14 @@ The goal was to have an easy-to-use tool for measurements over a longer period o
 
 Comments are added into the CSV file so that the CSV file can be understood by someone else without problems or maybe yourself a few months later. You can also add your own comment, e.g. for a short description of what was measured.
 
+## Install from source code
+
+DMM logger is written in Rust. Currently you have to install using `cargo`:
+
+```console
+cargo install --git https://github.com/mrothNET/dmm-logger
+```
+
 ## Usage
 
 Basic usage is pretty simple. The settings of the instrument remain unchanged and one measurement per second is performed and written to the CSV file:
