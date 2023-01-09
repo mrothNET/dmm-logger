@@ -22,7 +22,7 @@ Basic usage is pretty simple. The settings of the instrument remain unchanged an
 dmm-logger 10.1.2.3 example.csv
 ```
 
-Where `10.1.2.3` should be replaced with the IP address or hostname of your intrument.
+Where `10.1.2.3` should be replaced with the IP address or hostname of your instrument.
 
 The resulting CSV file can be plotted in python notebook with:
 
@@ -98,7 +98,7 @@ Usage: `dmm-logger [OPTIONS] <HOST> [FILE]`
 
 ## CSV file Format
 
-The creates CSV file contains 7 columns:
+The created CSV file contains 7 columns:
 
 <dl>
 
