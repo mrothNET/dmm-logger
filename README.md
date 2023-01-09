@@ -40,80 +40,90 @@ Usage: `dmm-logger [OPTIONS] <HOST> [FILE]`
 
 #### Arguments
 
-`<HOST>`
-: Network name or IP address of the instrument.
+<dl>
+<dt><code>&lt;HOST&gt;</code></dt>
+<dd>Network name or IP address of the instrument.</dd>
 
-`[FILE]`
-: Filename to save the CSV lines into. If omitted, lines are written to stdout.
+<dt><code>[FILE]</code></dt>
+<dd>Filename to save the CSV lines into. If omitted, lines are written to stdout.</dd>
+</dl>
 
 #### Options
 
-`--interval <SECONDS>` | `--rate <HERTZ>`
-: Set the sampling interval respectively the sampling rate. Default interval is 1 second or 1 hertz.
+<dl>
 
-`-n <COUNT>`
-: Restricts the number of samples to take. Default is unlimited until you hit `CTRL-C`.
+<dt><code>--interval &lt;SECONDS&gt;</code> | <code>--rate &lt;HERTZ&gt;</code></dt>
+<dd>Set the sampling interval respectively the sampling rate. Default interval is 1 second or 1 hertz.</dd>
 
-`--display-off` | `--display-text [<TEXT>]`
-: Switch off instruments display or displays a text message on instrument during logging. Makes most instruments faster.
+<dt><code>-n &lt;COUNT&gt;</code></dt>
+<dd>Restricts the number of samples to take. Default is unlimited until you hit `CTRL-C`</dd>
 
-`--drop-slow-samples`
-: Drop delayed samples or samples with high latency. Helps with fast sampling because lack of realtime behaviour.
+<dt><code>--display-off</code> | <code>--display-text [&lt;TEXT&gt;]</code></dt>
+<dd>Switch off instruments display or displays a text message on instrument during logging. Makes most instruments faster.</dd>
 
-`-U, --voltage <RANGE>` | `-I, --current <RANGE>` | `-R, --resistance <RANGE>`
-: Configures instrument for voltage, current or resistant measurement.
+<dt><code>--drop-slow-samples</code></dt>
+<dd>Drop delayed samples or samples with high latency. Helps with fast sampling because lack of realtime behaviour.</dd>
 
-`--DC` | `--AC`
-: Selects between DC- or AC-mode for voltage or current measurement.
+<dt><code>-U, --voltage &lt;RANGE&gt;</code> | <code>-I, --current &lt;RANGE&gt;</code> | <code>-R, --resistance &lt;RANGE&gt;</code></dt>
+<dd>Configures instrument for voltage, current or resistant measurement.</dd>
 
-`-2, --two-wire` | `-4, --four-wire`
-: Selects between 2-wire or 4-wire resistance measurement.
+<dt><code>--DC</code> | <code>--AC</code></dt>
+<dd>Selects between DC- or AC-mode for voltage or current measurement.</dd>
 
-`--resolution <VALUE>`
-: Resolution in units as the measurement function. For example `0.001`.
+<dt><code>-2, --two-wire</code> | <code>-4, --four-wire</code></dt>
+<dd>Selects between 2-wire or 4-wire resistance measurement.</dd>
 
-`--nplc <NPLC>`
-: Integration time in number of power line cycles. Typical integration cycles are 10 or 1.
+<dt><code>--resolution &lt;VALUE&gt;</code></dt>
+<dd>Resolution in units as the measurement function. For example `0.001`.</dd>
 
-`-m, --message <TEXT>` | `--message-from <FILE>`
-: Add a custom message to the CSV file as comment. Use this to add a short reminder into the CSV file to help you recall the experiment a few month later.
+<dt><code>--nplc &lt;NPLC&gt;</code></dt>
+<dd>Integration time in number of power line cycles. Typical integration cycles are 10 or 1.</dd>
 
-`--beep`
-: Beep instrument when logging finished.
+<dt><code>-m, --message &lt;TEXT&gt;</code> | <code>--message-from &lt;FILE&gt;</code></dt>
+<dd>Add a custom message to the CSV file as comment. Use this to add a short reminder into the CSV file to help you recall the experiment a few month later.</dd>
 
-`--reset`
-: Performs instrument reset before logging. Helps to start with a known state of all instrument settings.
+<dt><code>--beep</code></dt>
+<dd>Beep instrument when logging finished.</dd>
 
-`--port`
-: <PORT> Network port for SCPI. Most instruments use the default port 5025.
+<dt><code>--reset</code></dt>
+<dd>Performs instrument reset before logging. Helps to start with a known state of all instrument settings.</dd>
 
-`--debug`
-: Print SCPI communication to stderr. If you have problems with an instrument working together with DMM logger this will help to sort out the issues.
+<dt><code>--port <PORT></code></dt>
+<dd><PORT> Network port for SCPI. Most instruments use the default port 5025.</dd>
+
+<dt><code>--debug</code></dt>
+<dd>Print SCPI communication to stderr. If you have problems with an instrument working together with DMM logger this will help to sort out the issues.</dd>
+
+</dl>
 
 ## CSV file Format
 
 The creates CSV file contains 7 columns:
 
-`sequence`
-: Sequential sample number starting at 0
+<dl>
 
-`date`
-: Local date of measurement: YEAR-MONTH-DAY
+<dt><code>sequence</code></dt>
+<dd>Sequential sample number starting at 0</dd>
 
-`time`
-: Local clock time of measurement: HOURS:MINUTES:SECONDS.MILLISECONDS
+<dt><code>date</code></dt>
+<dd>Local date of measurement: YEAR-MONTH-DAY</dd>
 
-`moment`
-: Time in seconds since first measurement
+<dt><code>time</code></dt>
+<dd>Local clock time of measurement: HOURS:MINUTES:SECONDS.MILLISECONDS</dd>
 
-`delay`
-: Delay of the measurement in seconds, caused by non-real-time behavior or fast logging rate
+<dt><code>moment</code></dt>
+<dd>Time in seconds since first measurement</dd>
 
-`latency`
-: Measurement duration in seconds including network roundtrip time
+<dt><code>delay</code></dt>
+<dd>Delay of the measurement in seconds, caused by non-real-time behavior or fast logging rate</dd>
 
-`reading`
-: Measured value returned from instrument
+<dt><code>latency</code></dt>
+<dd>Measurement duration in seconds including network roundtrip time</dd>
+
+<dt><code>reading</code></dt>
+<dd>Measured value returned from instrument</dd>
+
+</dl>
 
 ### Example CSV file
 
