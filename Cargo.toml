@@ -2,7 +2,7 @@
 name = "dmm-logger"
 description = "Connects to a digital multimeter and log measurements into CSV files."
 repository = "https://github.com/mrothNET/dmm-logger"
-version = "1.0.0"
+version = "1.0.1"
 keywords = ["SCPI", "DMM", "logger"]
 authors = ["Michael Roth <mail@mroth.net>"]
 edition = "2021"
@@ -11,7 +11,7 @@ readme = "README.md"
 
 [dependencies]
 anyhow = "1"
-chrono = "0.4"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 clap = { version = "4", features = ["derive"] }
 console = "0.15"
 indicatif = "0.17"
