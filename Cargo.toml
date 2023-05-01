@@ -7,7 +7,6 @@ keywords = ["SCPI", "DMM", "logger"]
 authors = ["Michael Roth <mail@mroth.net>"]
 edition = "2021"
 license = "GPL-3.0-or-later"
-license-file = "GPL-3.0.txt"
 readme = "README.md"
 
 [dependencies]
