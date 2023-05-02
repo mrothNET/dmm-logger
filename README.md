@@ -1,14 +1,18 @@
 # DMM Logger
 
-Connects via TCP to a digital multimeter and log measurements from DMM using SCPI into CSV files.
+Connects via TCP to a digital multimeter and logs measurements from the DMM using SCPI into CSV files.
 
-The goal was to have an easy-to-use tool for measurements over a longer period of time that logs the measurements in a CSV file.
+The goal is to provide an easy-to-use tool for taking measurements over a longer period of time and logging the results in a CSV file.
 
-Comments are added into the CSV file so that the CSV file can be understood by someone else without problems or maybe yourself a few months later. You can also add your own comment, e.g. for a short description of what was measured.
+Comments are added to the CSV file, making it easily understandable by someone else or even by yourself after a few months. You can also add your own comments, such as a short description of what was measured.
 
 ## Install from source code
 
-DMM logger is written in Rust. Currently you have to install using `cargo`:
+DMM Logger is written in Rust. To install it from the source code, you will first need to have Rust and its package manager `cargo` installed on your system. You can obtain Rust using the official Rust toolchain installer `rustup`.
+
+Visit the `rustup` homepage at [https://rustup.rs](https://rustup.rs) and follow the instructions provided to install Rust and Cargo for your platform. Once Rust and Cargo are installed and configured, you can proceed with installing DMM Logger.
+
+To install DMM Logger, run the following command in your terminal:
 
 ```console
 cargo install --git https://github.com/mrothNET/dmm-logger
@@ -16,15 +20,15 @@ cargo install --git https://github.com/mrothNET/dmm-logger
 
 ## Usage
 
-Basic usage is pretty simple. The settings of the instrument remain unchanged and one measurement per second is performed and written to the CSV file:
+Basic usage is straightforward. The instrument settings remain unchanged, and one measurement per second is performed and written to the CSV file:
 
 ```console
 dmm-logger 10.1.2.3 example.csv
 ```
 
-Where `10.1.2.3` should be replaced with the IP address or hostname of your instrument.
+Replace `10.1.2.3` with the IP address or hostname of your instrument.
 
-The resulting CSV file can be plotted in python notebook with:
+The resulting CSV file can be plotted in a Python notebook with:
 
 ```python
 import pandas as pd
